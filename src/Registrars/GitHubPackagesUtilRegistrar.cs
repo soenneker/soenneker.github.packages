@@ -15,8 +15,8 @@ public static class GitHubPackagesUtilRegistrar
     /// </summary>
     public static IServiceCollection AddGitHubPackagesUtilAsSingleton(this IServiceCollection services)
     {
-        services.AddGitHubClientUtilAsSingleton();
-        services.TryAddSingleton<IGitHubPackagesUtil, GitHubPackagesUtil>();
+        services.AddGitHubClientUtilAsSingleton()
+                .TryAddSingleton<IGitHubPackagesUtil, GitHubPackagesUtil>();
 
         return services;
     }
@@ -26,8 +26,8 @@ public static class GitHubPackagesUtilRegistrar
     /// </summary>
     public static IServiceCollection AddGitHubPackagesUtilAsScoped(this IServiceCollection services)
     {
-        services.AddGitHubClientUtilAsSingleton();
-        services.TryAddScoped<IGitHubPackagesUtil, GitHubPackagesUtil>();
+        services.AddGitHubClientUtilAsSingleton()
+                .TryAddScoped<IGitHubPackagesUtil, GitHubPackagesUtil>();
 
         return services;
     }

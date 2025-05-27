@@ -1,54 +1,64 @@
-using Soenneker.GitHub.Packages.Abstract;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Octokit;
 using Soenneker.Extensions.Task;
 using Soenneker.Extensions.ValueTask;
-using Soenneker.GitHub.Client.Abstract;
+using Soenneker.GitHub.ClientUtil.Abstract;
+using Soenneker.GitHub.OpenApiClient;
+using Soenneker.GitHub.OpenApiClient.Models;
+using Soenneker.GitHub.Packages.Abstract;
 
 namespace Soenneker.GitHub.Packages;
 
-/// <inheritdoc cref="IGitHubPackagesUtil"/>
-public class GitHubPackagesUtil: IGitHubPackagesUtil
+///<inheritdoc cref="IGitHubPackagesUtil"/>
+public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
 {
-    private readonly IGitHubClientUtil _gitHubClientUtil;
     private readonly ILogger<GitHubPackagesUtil> _logger;
+    private readonly IGitHubOpenApiClientUtil _gitHubClientUtil;
+    private const int _maximumPerPage = 100;
 
-    private const int _pageSize = 100; // GitHub's API maximum page size
-
-    public GitHubPackagesUtil(IGitHubClientUtil gitHubClientUtil, ILogger<GitHubPackagesUtil> logger)
+    public GitHubPackagesUtil(ILogger<GitHubPackagesUtil> logger, IGitHubOpenApiClientUtil gitHubClientUtil)
     {
-        _gitHubClientUtil = gitHubClientUtil;
         _logger = logger;
+        _gitHubClientUtil = gitHubClientUtil;
     }
 
-    public async ValueTask<List<Package>> GetAllForUser(string owner, PackageType packageType, CancellationToken cancellationToken = default)
+    public async ValueTask<List<Package>> GetAllForUser(string owner, Package_package_type packageType, CancellationToken cancellationToken = default)
     {
-        GitHubClient client = await _gitHubClientUtil.Get(cancellationToken).NoSync();
-
         _logger.LogInformation("Getting all packages for owner ({owner})...", owner);
 
-        var packages = new List<Package>();
+        GitHubOpenApiClient client = await _gitHubClientUtil.Get(cancellationToken).NoSync();
+
+        var result = new List<Package>();
         var page = 1;
 
-        IReadOnlyList<Package> currentPage;
-        do
+        while (true)
         {
-            var apiOptions = new ApiOptions
-            {
-                PageSize = _pageSize,
-                PageCount = 1,
-                StartPage = page
-            };
+            List<Package>? packages = await client.Users[owner]
+                                                  .Packages.GetAsync(requestConfiguration =>
+                                                  {
+                                                      requestConfiguration.QueryParameters.PackageType = packageType.ToString().ToLower();
+                                                      requestConfiguration.QueryParameters.Page = page;
+                                                      requestConfiguration.QueryParameters.PerPage = _maximumPerPage;
+                                                  }, cancellationToken).NoSync();
 
-            currentPage = await client.Packages.GetAllForUser(owner, packageType, apiOptions).NoSync();
-            packages.AddRange(currentPage);
+            if (packages?.Count == 0)
+                break;
+
+            _logger.LogDebug("Found {Count} packages", packages?.Count ?? 0);
+
+            if (packages != null)
+            {
+                result.AddRange(packages);
+            }
+
+            if (packages?.Count < _maximumPerPage)
+                break;
+
             page++;
         }
-        while (currentPage.Count == _pageSize && !cancellationToken.IsCancellationRequested);
 
-        return packages;
+        return result;
     }
 }

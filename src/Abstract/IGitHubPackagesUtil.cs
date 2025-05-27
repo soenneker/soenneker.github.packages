@@ -1,8 +1,8 @@
-using Octokit;
+using Soenneker.GitHub.OpenApiClient.Models;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Soenneker.GitHub.Packages.Abstract;
 
@@ -12,5 +12,5 @@ namespace Soenneker.GitHub.Packages.Abstract;
 public interface IGitHubPackagesUtil
 {
     [Pure]
-    ValueTask<List<Package>> GetAllForUser(string owner, PackageType packageType, CancellationToken cancellationToken = default);
+    ValueTask<List<Package>> GetAllForUser(string owner, Package_package_type packageType, CancellationToken cancellationToken = default);
 }

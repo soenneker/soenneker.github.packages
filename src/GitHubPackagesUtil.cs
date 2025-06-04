@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Soenneker.Extensions.String;
 using Soenneker.Extensions.Task;
 using Soenneker.Extensions.ValueTask;
 using Soenneker.GitHub.ClientUtil.Abstract;
@@ -38,7 +39,7 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
             List<Package>? packages = await client.Users[owner]
                                                   .Packages.GetAsync(requestConfiguration =>
                                                   {
-                                                      requestConfiguration.QueryParameters.PackageType = packageType.ToString().ToLower();
+                                                      requestConfiguration.QueryParameters.PackageType = packageType.ToString().ToLowerInvariantFast();
                                                       requestConfiguration.QueryParameters.Page = page;
                                                       requestConfiguration.QueryParameters.PerPage = _maximumPerPage;
                                                   }, cancellationToken).NoSync();

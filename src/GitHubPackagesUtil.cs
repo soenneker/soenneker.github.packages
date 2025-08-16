@@ -39,7 +39,7 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
             List<Package>? packages = await client.Users[owner]
                                                   .Packages.GetAsync(requestConfiguration =>
                                                   {
-                                                      requestConfiguration.QueryParameters.PackageType = packageType.ToString().ToLowerInvariantFast();
+                                                      requestConfiguration.QueryParameters.PackageType = (Soenneker.GitHub.OpenApiClient.Users.Item.Packages.GetPackage_typeQueryParameterType)packageType;
                                                       requestConfiguration.QueryParameters.Page = page;
                                                       requestConfiguration.QueryParameters.PerPage = _maximumPerPage;
                                                   }, cancellationToken).NoSync();

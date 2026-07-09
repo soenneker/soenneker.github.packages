@@ -26,7 +26,7 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
         _gitHubClientUtil = gitHubClientUtil;
     }
 
-    public async ValueTask<List<Package>> GetAllForUser(string owner, Package_package_type packageType, CancellationToken cancellationToken = default)
+    public async ValueTask<List<Package>> GetAllForUser(string owner, PackagePackageType packageType, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting all packages for owner ({owner})...", owner);
 
@@ -40,7 +40,7 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
             List<Package>? packages = await client.Users[owner]
                                                   .Packages.GetAsync(requestConfiguration =>
                                                   {
-                                                      requestConfiguration.QueryParameters.PackageType = (Soenneker.GitHub.OpenApiClient.Users.Item.Packages.GetPackage_typeQueryParameterType)packageType;
+                                                      requestConfiguration.QueryParameters.PackageType = (PackagesListPackagesForUserPackageTypeParameter) packageType;
                                                       requestConfiguration.QueryParameters.Page = page;
                                                       requestConfiguration.QueryParameters.PerPage = _maximumPerPage;
                                                   }, cancellationToken).NoSync();
@@ -64,7 +64,7 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
         return result;
     }
 
-    public async ValueTask DeleteAllVersions(string owner, string packageName, Package_package_type packageType, CancellationToken cancellationToken = default)
+    public async ValueTask DeleteAllVersions(string owner, string packageName, PackagePackageType packageType, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Deleting package ({packageName}) for owner ({owner})...", packageName, owner);
 
@@ -86,7 +86,7 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
                     {
                         try
                         {
-                            await client.User.Packages[packageType.ToString().ToLowerInvariantFast()][packageName].Versions[version.Id.Value].DeleteAsync(cancellationToken: cancellationToken).NoSync();
+                            await client.User.Packages[packageType.ToString().ToLowerInvariantFast()][packageName].Versions[version.Id.Value.ToString()].DeleteAsync(cancellationToken: cancellationToken).NoSync();
                             _logger.LogDebug("Deleted version {VersionId} of package {PackageName}", version.Id.Value, packageName);
                         }
                         catch (Exception versionEx)
@@ -110,7 +110,7 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
         }
     }
 
-    public async ValueTask Delete(string owner, string packageName, Package_package_type packageType, CancellationToken cancellationToken = default)
+    public async ValueTask Delete(string owner, string packageName, PackagePackageType packageType, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Deleting entire package ({packageName}) for owner ({owner})...", packageName, owner);
 

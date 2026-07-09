@@ -19,7 +19,7 @@ namespace Soenneker.GitHub.Packages.Abstract;
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task containing the result of the operation.</returns>
         [Pure]
-        ValueTask<List<Package>> GetAllForUser(string owner, Package_package_type packageType, CancellationToken cancellationToken = default);
+        ValueTask<List<Package>> GetAllForUser(string owner, PackagePackageType packageType, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Deletes all versions.
@@ -29,7 +29,7 @@ namespace Soenneker.GitHub.Packages.Abstract;
         /// <param name="packageType">The package type.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        ValueTask DeleteAllVersions(string owner, string packageName, Package_package_type packageType, CancellationToken cancellationToken = default);
+        ValueTask DeleteAllVersions(string owner, string packageName, PackagePackageType packageType, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Executes the delete operation.
@@ -39,5 +39,5 @@ namespace Soenneker.GitHub.Packages.Abstract;
         /// <param name="packageType">The package type.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        ValueTask Delete(string owner, string packageName, Package_package_type packageType, CancellationToken cancellationToken = default);
+        ValueTask Delete(string owner, string packageName, PackagePackageType packageType, CancellationToken cancellationToken = default);
     }

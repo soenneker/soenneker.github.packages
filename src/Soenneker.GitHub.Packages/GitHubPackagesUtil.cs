@@ -13,7 +13,6 @@ using Soenneker.GitHub.Packages.Abstract;
 
 namespace Soenneker.GitHub.Packages;
 
-///<inheritdoc cref="IGitHubPackagesUtil"/>
 public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
 {
     private readonly ILogger<GitHubPackagesUtil> _logger;
@@ -71,32 +70,59 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
         try
         {
             GitHubOpenApiClient client = await _gitHubClientUtil.Get(cancellationToken).NoSync();
-            
-            // Get all versions of the package first
-            var versions = await client.User.Packages[packageType.ToString().ToLowerInvariantFast()][packageName].Versions.GetAsync(cancellationToken: cancellationToken).NoSync();
-            
-            if (versions?.Count > 0)
+            string packageTypePath = packageType.ToString().ToLowerInvariantFast();
+            var versions = new List<PackageVersion>();
+            var page = 1;
+
+            while (true)
+            {
+                string versionsUrl = $"https://api.github.com/users/{Uri.EscapeDataString(owner)}/packages/{packageTypePath}/" +
+                                     $"{Uri.EscapeDataString(packageName)}/versions?page={page}&per_page={_maximumPerPage}";
+
+                List<PackageVersion>? pageVersions = await client.Users[owner].Packages[packageTypePath][packageName].Versions
+                    .WithUrl(versionsUrl)
+                    .GetAsync(cancellationToken: cancellationToken)
+                    .NoSync();
+
+                if (pageVersions == null || pageVersions.Count == 0)
+                    break;
+
+                versions.AddRange(pageVersions);
+
+                if (pageVersions.Count < _maximumPerPage)
+                    break;
+
+                page++;
+            }
+
+            if (versions.Count > 0)
             {
                 _logger.LogDebug("Found {Count} versions to delete", versions.Count);
-                
-                // Delete each version
-                foreach (var version in versions)
+                var failures = new List<Exception>();
+
+                foreach (PackageVersion version in versions)
                 {
                     if (version.Id.HasValue)
                     {
                         try
                         {
-                            await client.User.Packages[packageType.ToString().ToLowerInvariantFast()][packageName].Versions[version.Id.Value.ToString()].DeleteAsync(cancellationToken: cancellationToken).NoSync();
+                            await client.Users[owner].Packages[packageTypePath][packageName].Versions[version.Id.Value.ToString()]
+                                .DeleteAsync(cancellationToken: cancellationToken)
+                                .NoSync();
                             _logger.LogDebug("Deleted version {VersionId} of package {PackageName}", version.Id.Value, packageName);
                         }
                         catch (Exception versionEx)
                         {
                             _logger.LogWarning(versionEx, "Failed to delete version {VersionId} of package {PackageName}", version.Id.Value, packageName);
+                            failures.Add(versionEx);
                         }
                     }
                 }
-                
-                _logger.LogInformation("Successfully processed all versions of package {PackageName}", packageName);
+
+                if (failures.Count > 0)
+                    throw new AggregateException($"Failed to delete {failures.Count} version(s) of package {packageName}.", failures);
+
+                _logger.LogInformation("Deleted all versions of package {PackageName}", packageName);
             }
             else
             {
@@ -117,9 +143,8 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
         try
         {
             GitHubOpenApiClient client = await _gitHubClientUtil.Get(cancellationToken).NoSync();
-            
-            // Delete the entire package (this deletes all versions automatically)
-            await client.User.Packages[packageType.ToString().ToLowerInvariantFast()][packageName].DeleteAsync(cancellationToken: cancellationToken).NoSync();
+            string packageTypePath = packageType.ToString().ToLowerInvariantFast();
+            await client.Users[owner].Packages[packageTypePath][packageName].DeleteAsync(cancellationToken: cancellationToken).NoSync();
             
             _logger.LogInformation("Successfully deleted entire package {PackageName}", packageName);
         }

@@ -13,6 +13,7 @@ using Soenneker.GitHub.Packages.Abstract;
 
 namespace Soenneker.GitHub.Packages;
 
+/// <inheritdoc cref="IGitHubPackagesUtil" />
 public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
 {
     private readonly ILogger<GitHubPackagesUtil> _logger;

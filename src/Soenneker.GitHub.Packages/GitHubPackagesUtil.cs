@@ -45,7 +45,7 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
                                                       requestConfiguration.QueryParameters.PerPage = _maximumPerPage;
                                                   }, cancellationToken).NoSync();
 
-            if (packages?.Count == 0)
+            if (packages is null || packages.Count == 0)
                 break;
 
             _logger.LogDebug("Found {Count} packages", packages?.Count ?? 0);

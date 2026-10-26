@@ -107,7 +107,7 @@ public sealed class GitHubPackagesUtil : IGitHubPackagesUtil
                     {
                         try
                         {
-                            await client.Users[owner].Packages[packageTypePath][packageName].Versions[version.Id.Value.ToString()]
+                            await client.Users[owner].Packages[packageTypePath][packageName].Versions[version.Id.Value]
                                 .DeleteAsync(cancellationToken: cancellationToken)
                                 .NoSync();
                             _logger.LogDebug("Deleted version {VersionId} of package {PackageName}", version.Id.Value, packageName);
